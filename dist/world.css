@@ -104,3 +104,71 @@ dialog{max-width:490px}
 .story-dialogue{margin:12px 0}
 }
 @media(prefers-reduced-motion:reduce){.page-turn .story-prose,.page-turn .story-dialogue{animation:none}.mission-progress span{transition:none}}
+/* The world continues behind every interface panel. */
+.app-shell{max-width:none;height:100svh}
+.novel-stage{position:fixed;inset:0;height:100svh;min-height:0;background:none}
+.canvas-wrap{position:absolute;inset:0!important;height:100%;width:100%;margin:0;min-height:0}
+.topbar{position:fixed;inset:0 0 auto;z-index:9;height:66px;background:#fff9edbd;border-bottom:1px solid #ebe3d03d;backdrop-filter:blur(12px)}
+.header-actions{display:flex;gap:15px;align-items:center}
+.header-actions .about-link{font-size:10px;letter-spacing:.5px}
+.reading-card{top:92px;width:390px;max-height:calc(100svh - 119px);overflow-y:auto;scrollbar-width:thin;padding:22px 25px 17px}
+.reading-card h1{font-size:27px;line-height:1.4;margin-bottom:16px}
+.reading-hidden .reading-card{display:none}
+.reading-top #changeGenre{margin-left:auto;white-space:nowrap;border:0;background:none;padding:0;color:inherit;font-size:8px;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.reading-top{letter-spacing:.7px;font-size:8px;align-items:center}
+.reading-top #storyEyebrow{max-width:60%;font-size:7px}
+.scene-badge{top:86px}.canvas-actions{top:82px}
+.genre-choices{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:16px 0}
+.genre-choices button{display:flex;flex-direction:column;align-items:flex-start;gap:7px;text-align:left;padding:15px 12px;border-radius:7px;border:1px solid #ddd4c0;cursor:pointer;background:#f4eddc;color:#4e6250;min-width:0}
+.genre-choices button:first-child{background:linear-gradient(135deg,#243b49,#15232f);color:#e3ede9;border-color:#61717a}
+.genre-choices button:last-child{background:linear-gradient(135deg,#f2daca,#fff0db);color:#805860}
+.genre-choices button:hover{transform:translateY(-2px);box-shadow:0 7px 18px #25443a22}
+.genre-choices small{font-size:8px;letter-spacing:1px;opacity:.7}
+.genre-choices strong{font-family:'Noto Serif KR',serif;font-size:20px;font-weight:500}
+.genre-choices button>span{font-size:10px;line-height:1.5;word-break:keep-all;opacity:.85}
+.cast-roster{display:flex;gap:7px;justify-content:space-between;margin:14px 0 16px;padding-top:13px;border-top:1px solid #d9d5c6}
+.cast-roster button{display:flex;flex-direction:column;align-items:center;gap:4px;border:0;background:none;color:#6e7b69;font-size:9px;font-weight:700;padding:0;cursor:pointer;flex:1}
+.cast-roster svg{width:42px;height:42px;border-radius:12px;transition:transform .2s}
+.cast-roster button:hover svg{transform:translateY(-3px) scale(1.06)}
+.character-portrait{width:96px;height:96px;margin:0 0 22px}
+.character-portrait svg{width:100%;height:100%}
+#characterDialog h2{font-size:30px;margin:12px 0 15px}
+#characterDialog .eyebrow{font-size:10px;letter-spacing:.3px}
+.mood-note{font-size:10px;color:#728b90;line-height:1.5;margin:7px 0}
+.time-option:disabled{cursor:default;opacity:.5}
+body[data-genre=mystery] .topbar{background:#10202acd;border-color:#89a3af25}
+body[data-genre=mystery] .brand,body[data-genre=mystery] .about-link{color:#e1e8df}
+body[data-genre=mystery] .top-center{color:#8da8af}
+body[data-genre=mystery] .reading-card{background:#142631ee;border-color:#66838c66;box-shadow:0 20px 70px #0005}
+body[data-genre=mystery] .reading-card h1,body[data-genre=mystery] .story-prose,body[data-genre=mystery] .story-dialogue{color:#dce5de}
+body[data-genre=mystery] .reading-top,body[data-genre=mystery] .reading-bottom,body[data-genre=mystery] .reading-bottom button{color:#89a2a6}
+body[data-genre=mystery] .mission-kicker{color:#b8b591}
+body[data-genre=mystery] .mission-progress{background:#32474e}
+body[data-genre=mystery] .mission-progress span{background:#99adb0}
+body[data-genre=mystery] .story-dialogue{border-color:#77979c}
+body[data-genre=mystery] .story-dialogue>span{color:#a7c2bf!important}
+body[data-genre=mystery] .primary-action{background:#47666b;color:#eef4e8}
+body[data-genre=mystery] .primary-action:disabled{background:#2d424b;color:#839699}
+body[data-genre=mystery] .secondary-action{background:#253d48;color:#b6cbc8;border-color:#607680}
+body[data-genre=mystery] .cast-roster{border-color:#59717a55}
+body[data-genre=mystery] .cast-roster button{color:#aec2be}
+body[data-genre=mystery] .settings-drawer,body[data-genre=mystery] .scene-badge,body[data-genre=mystery] .circle-button,body[data-genre=mystery] .drag-hint{background:#203641db;border-color:#58727c66;color:#c8d8d4}
+body[data-genre=mystery] .settings-drawer summary,body[data-genre=mystery] .setting-label,body[data-genre=mystery] .ambient-switches{color:#b4cbc6}
+body[data-genre=mystery] dialog{background:#172c36;color:#e1e7db}
+body[data-genre=mystery] dialog p,body[data-genre=mystery] dialog .dialog-close,body[data-genre=mystery] dialog h2{color:#bfcfc6}
+body[data-genre=romance] .mission-kicker{color:#ac747b}
+body[data-genre=romance] .mission-progress span{background:#bf8794}
+body[data-genre=romance] .story-dialogue{border-color:#c69ca7}
+@media(max-width:900px){
+.topbar{height:60px;padding:0 14px}.brand{font-size:16px}.header-actions{gap:7px}.header-actions .about-link{font-size:8px}.header-actions .about-link span{display:none}
+.reading-card{top:73px;left:12px;width:calc(100% - 24px);padding:14px 17px 12px;max-height:53svh}
+.reading-card h1{font-size:22px;margin:0 0 10px}.story-prose{font-size:14px;line-height:1.65}
+.story-dialogue{margin:9px 0 11px}.story-dialogue p{font-size:13px;line-height:1.65}
+.cast-roster{margin:9px 0 10px;padding-top:8px;gap:5px}.cast-roster svg{width:29px;height:29px;border-radius:8px}.cast-roster button{font-size:8px;gap:3px}
+.genre-choices{margin:11px 0;gap:6px}.genre-choices button{padding:11px 10px;gap:5px}.genre-choices strong{font-size:18px}.genre-choices button>span{font-size:9px}
+.scene-badge{display:none}.canvas-actions{top:auto;bottom:72px;right:14px;gap:6px}.circle-button{width:29px;height:29px}
+.camera-caption{bottom:113px;left:14px}.drag-hint{max-width:180px;bottom:13px}.settings-popover{bottom:13px}
+.reading-top #storyEyebrow{font-size:6px;max-width:55%}.reading-top #changeGenre{font-size:7px}.reading-top{font-size:7px}
+.reading-bottom{font-size:8px}.reading-bottom span{font-size:8px}.primary-action,.secondary-action{font-size:10px}
+}
+@media(max-height:720px) and (max-width:900px){.reading-card{max-height:55svh;top:68px;padding:11px 14px 10px}.reading-card h1{font-size:20px}.story-prose{font-size:13px;line-height:1.55}.story-dialogue p{font-size:12px}.cast-roster svg{width:25px;height:25px}}

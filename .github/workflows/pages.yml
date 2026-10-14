@@ -27,6 +27,9 @@ jobs:
         run: |
           node --check dist/app3d.js
           node --check dist/scene-director.js
+          node --check dist/characters.js
+          node --check dist/stories.js
+          node --check dist/atmosphere.js
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
       - name: Upload static site

@@ -1,6 +1,9 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { SceneDirector } from './scene-director.js';
+import { CharacterCast, CHARACTERS, portraitSvg } from './characters.js';
+import { STORIES, STORY_SHOTS, CAST_SCENES, INTRO_CAST } from './stories.js';
+import { HarborMist } from './atmosphere.js';
 
 const $ = id => document.getElementById(id);
 const canvas = $('scene');
@@ -32,6 +35,7 @@ const director=new SceneDirector(camera,controls,mode=>{
   $('cameraStatus').textContent={manual:'직접 탐험 중',travelling:'장면 전환 중',following:'배를 따라가는 중',scene:'이야기의 시선'}[mode];
   wrap.classList.toggle('is-travelling',mode==='travelling');
 });
+const screenFrame={span:15,aspect:1,focusX:.5,focusY:.5};
 
 const ambient = new THREE.HemisphereLight('#fffaf0', '#879ca4', 1.45);
 scene.add(ambient);
@@ -51,7 +55,7 @@ scene.add(sun);
 
 const world = new THREE.Group();
 scene.add(world);
-const state = { time:'sunset', palette:'candy', waves:40, boats:true, birds:true, lighthouseOn:false, page:0, choice:'signal', arrivalReady:false, routeIndex:0, hint:false, boatClock:0, returnProgress:0, returning:false, ripples:[], fish:[] };
+const state = { time:'sunset', palette:'candy', waves:40, boats:true, birds:true, lighthouseOn:false, genre:null, page:0, choice:'signal', arrivalReady:false, routeIndex:0, hint:false, boatClock:0, returnProgress:0, returning:false, ripples:[], fish:[] };
 const palettes = {
   candy:['#eaa28c','#e9c267','#9cc4ad','#89a9c4','#d7a8b7','#c4b69d','#a7c7a1','#efba89','#98a5bd','#d19f88'],
   coastal:['#8daabb','#d9c9ae','#aabcae','#7399aa','#c7b2a7','#b8b8ab','#91b4ad','#e6d9be','#9fb7b6','#c6b6a1'],
@@ -115,7 +119,9 @@ function buildWater(){
   box(world,0,-.55,1.25,18,.62,11,mat('#417a8a'),false);
   const geometry=new THREE.PlaneGeometry(18,11,96,64);
   waterUniforms={uTime:{value:0},uAmplitude:{value:.075},uDeep:{value:color(themes.day.waterDeep)},uLight:{value:color(themes.day.waterLight)},uRipples:{value:Array.from({length:8},()=>new THREE.Vector3(0,0,-1))}};
-  const material=new THREE.ShaderMaterial({ uniforms:waterUniforms,side:THREE.DoubleSide,vertexShader:`
+  waterUniforms=THREE.UniformsUtils.merge([THREE.UniformsLib.fog,waterUniforms]);
+  const material=new THREE.ShaderMaterial({ uniforms:waterUniforms,fog:true,side:THREE.DoubleSide,vertexShader:`
+    #include <fog_pars_vertex>
     uniform float uTime; uniform float uAmplitude; uniform vec3 uRipples[8];
     varying vec3 vWorld; varying vec3 vNormalWorld; varying float vWave;
     void main(){
@@ -128,8 +134,11 @@ function buildWater(){
       float dx=(cos(x*1.75+uTime*.78)*1.75*.55+cos((x+z)*3.8+uTime*1.5)*3.8*.15)*uAmplitude;
       float dz=(cos(z*2.8-uTime*1.15)*2.8*.3+cos((x+z)*3.8+uTime*1.5)*3.8*.15)*uAmplitude;
       vNormalWorld=normalize(vec3(-dx,1.0,-dz));
-      gl_Position=projectionMatrix*viewMatrix*wp;
+      vec4 mvPosition=viewMatrix*wp;
+      gl_Position=projectionMatrix*mvPosition;
+      #include <fog_vertex>
     }`,fragmentShader:`
+    #include <fog_pars_fragment>
     uniform float uTime;uniform vec3 uDeep;uniform vec3 uLight;
     varying vec3 vWorld; varying vec3 vNormalWorld; varying float vWave;
     void main(){
@@ -143,6 +152,7 @@ function buildWater(){
       gl_FragColor=vec4(c,1.0);
       #include <tonemapping_fragment>
       #include <colorspace_fragment>
+      #include <fog_fragment>
     }` });
   waterMesh=addMesh(world,geometry,material,0,.025,1.25,false);
   waterMesh.rotation.x=-Math.PI/2;
@@ -309,17 +319,13 @@ function lightRoute(index){
 }
 
 buildWater();buildTown();buildIsland();buildBoats();buildBirds();buildRoute();buildCelebration();
+const cast=new CharacterCast(world,clickTargets);
+const mist=new HarborMist(world);
 
 function buildStoryObjects(){
   const entrance=[];
-  const character=new THREE.Group();character.position.set(5.22,.58,2.38);world.add(character);
-  const coat=mat('#db9276'),hair=mat('#493f34');
-  cylinder(character,0,.34,0,.13,.2,.42,coat,12);
-  sphere(character,0,.68,0,.13,mat('#f2ceb0'),1,1.1,1);
-  sphere(character,0,.75,-.035,.14,hair,1,.7,1);
-  for(const x of [-.08,.08])cylinder(character,x,.09,0,.035,.04,.18,darkStoneMat,8);
-  for(const x of [-.16,.16])beamBetween(character,[x,.5,0],[x*.9,.24,.035],.035,coat);
-  const memory=character.clone(true);memory.position.set(6.22,.58,1.3);world.add(memory);
+  const character=cast.actors.Bishop.root;
+  const memory=cast.actors.Bishop.model.clone(true);memory.position.set(6.22,.58,1.3);world.add(memory);
   memory.traverse(obj=>{if(obj.isMesh){obj.material=obj.material.clone();obj.material.color.set('#e6d6aa');obj.material.transparent=true;obj.material.opacity=.3;obj.material.emissive.set('#d7b76e');obj.material.emissiveIntensity=.4;obj.castShadow=false}});
   const moon=sphere(world,-4.8,6.5,-7,.62,new THREE.MeshBasicMaterial({color:'#f8e5b4'}));
   const stars=new THREE.Group();world.add(stars);
@@ -349,22 +355,28 @@ function buildStoryObjects(){
     const target=addMesh(b.group,new THREE.SphereGeometry(.42,12,8),new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false}),0,.5,0,false);
     target.userData.action='buoy';target.userData.index=i;clickTargets.unshift(target);
   });
-  entrance.push(character,memory,moon,letter,lanterns);
-  return {character,memory,moon,stars,signal,boatMail,letter,paper,lanterns,shipTarget,entrance};
+  entrance.push(memory,moon,letter,lanterns);
+  return {character,memory,moon,stars,signal,boatMail,letter,paper,letterCanvas:paperCanvas,letterTexture:paperTexture,lanterns,shipTarget,entrance};
 }
 const storyObjects=buildStoryObjects();
 function revealStoryObjects(){
-  const page=state.page;
-  const show=(obj,visible)=>{if(visible&&!obj.visible)obj.scale.setScalar(.01);obj.visible=visible};
-  show(storyObjects.character,page>=1);
-  show(storyObjects.memory,(page===3&&state.choice==='memory')||page===7);
-  show(storyObjects.moon,page>=3);
-  show(storyObjects.letter,page===10);
-  show(storyObjects.lanterns,page>=10);
-  storyObjects.stars.visible=page>=3;
-  storyObjects.signal.visible=page>=2&&page<=9;
-  storyObjects.shipTarget.visible=page>=2&&page<=9;
-  storyObjects.boatMail.visible=page>=3&&page<=9;
+ const page=state.page,genre=state.genre;
+ const show=(obj,visible)=>{if(visible&&!obj.visible)obj.scale.setScalar(.01);obj.visible=visible};
+ cast.layout(genre?CAST_SCENES[page]:INTRO_CAST);
+ show(storyObjects.memory,genre==='mystery'&&(page===7||page===11));
+ show(storyObjects.moon,!!genre&&(genre==='mystery'||page>=7));
+ show(storyObjects.letter,!!genre&&page===10);
+ show(storyObjects.lanterns,genre==='romance'&&page>=10);
+ storyObjects.stars.visible=!!genre&&(genre==='mystery'||page>=7);
+ storyObjects.signal.visible=!!genre&&page>=2&&page<=9;
+ storyObjects.shipTarget.visible=!!genre&&page>=2&&page<=9;
+ storyObjects.boatMail.visible=!!genre&&page>=3&&page<=9;
+ storyObjects.moon.material.color.set(genre==='mystery'?'#bdccd2':'#f8dfa6');
+}
+function writeStoryLetter(){
+ const pen=storyObjects.letterCanvas.getContext('2d');pen.fillStyle=state.genre==='mystery'?'#dddccd':'#fff4df';pen.fillRect(0,0,512,640);
+ pen.strokeStyle='#ad9472';pen.strokeRect(20,20,472,600);pen.fillStyle='#383326';pen.font='bold 28px serif';pen.textAlign='center';
+ STORIES[state.genre].letter.forEach((line,i)=>pen.fillText(line,256,83+i*49));storyObjects.letterTexture.needsUpdate=true;
 }
 function animateStoryObjects(t,dt){
   for(const obj of storyObjects.entrance)if(obj.visible){const size=THREE.MathUtils.lerp(obj.scale.x,1,1-Math.exp(-dt*4));obj.scale.setScalar(size)}
@@ -377,39 +389,31 @@ function animateStoryObjects(t,dt){
   storyObjects.paper.rotation.x=state.page===10?Math.sin(t*.6)*.025:0;
 }
 
-const storyShots=[
- {label:'항구 전경',target:[-.2,.5,.1],theta:.64,phi:1.08,zoom:1},
- {label:'등대섬에 돌아온 윤',target:[5.55,1.25,2.05],theta:1.12,phi:1.03,zoom:2.15},
- {label:'멀리서 깜박이는 신호',target:[4.5,.7,5.8],theta:.28,phi:1.2,zoom:2.3},
- {label:'우편배와 작은 봉투',target:[4.5,.68,5.8],theta:-.45,phi:1.18,zoom:3.45},
- {label:'첫 번째 부표',target:[3.35,.5,3.45],theta:-.65,phi:1.04,zoom:3.1},
- {label:'두 번째 불빛',target:[.3,.5,1.05],theta:.1,phi:1.18,zoom:2.9},
- {label:'하나로 이어진 항로',target:[.6,.5,1.6],theta:-.7,phi:.68,zoom:1.4,duration:2100},
- {label:'등대 꼭대기의 기억',target:[5.82,2.75,1.87],theta:1.15,phi:1.23,zoom:3.6,duration:2100},
- {label:'바다로 건너가는 빛',target:[5.82,2.4,1.87],theta:1.9,phi:1.09,zoom:2.8},
- {label:'우편배의 귀항',target:[4.5,.65,5.8],theta:.8,phi:1.06,zoom:2.5},
- {label:'등대 앞으로 온 편지',target:[-5.55,1.13,-1.75],theta:-.5,phi:1.28,zoom:3.7},
- {label:'불빛이 남은 항구',target:[-.8,.8,-.2],theta:-.65,phi:.9,zoom:1,duration:2400}
-];
+const storyShots=STORY_SHOTS;
+const overviewShot={label:'항구 전체 보기',target:[-.2,.5,.1],theta:.64,phi:1.08,zoom:.9,duration:2100};
 function focusStoryPage(){
-  const shot=storyShots[state.page];$('shotLabel').textContent=shot.label;
-  const boatFocus=()=>returnBoat.position.clone().add(new THREE.Vector3(0,.55,0));
-  director.move(state.page===9?{...shot,target:boatFocus().toArray()}:shot,state.page===9?boatFocus:null);
+ let shot=storyShots[state.genre?state.page:0];
+ if(state.genre==='mystery'&&state.page===11)shot={label:'등대에 남은 여섯 번째 그림자',target:[5.85,1.5,2],theta:-.65,phi:1.14,zoom:2.15,duration:2400};
+ if(state.genre==='romance'&&state.page===2)shot={...shot,label:'금빛 바다의 후니'};
+ $('shotLabel').textContent=shot.label;
+ const boatFocus=()=>returnBoat.position.clone().add(new THREE.Vector3(0,.7,0));
+ const follow=state.genre&&state.page===9;
+ director.move(follow?{...shot,target:boatFocus().toArray()}:shot,follow?boatFocus:null);
 }
 
-
 function applyTheme(){
-  const theme=themes[state.time];
-  scene.background.set(theme.sky);
-  scene.fog.color.set(theme.fog);
-  sun.color.set(theme.sun);
-  sun.intensity=theme.sunPower;
-  ambient.intensity=theme.ambient;
-  renderer.toneMappingExposure=theme.exposure;
-  windowMat.emissiveIntensity=theme.windows;
-  waterUniforms.uDeep.value.set(theme.waterDeep);
-  waterUniforms.uLight.value.set(theme.waterLight);
-  $('sceneLabel').textContent={day:'SUNNY AFTERNOON',sunset:'GOLDEN HOUR',night:'MOONLIT HARBOR'}[state.time];
+ let theme=themes[state.time];
+ const dark=state.genre==='mystery';
+ if(dark)theme={sky:'#101c28',fog:'#263b47',waterDeep:'#071d2b',waterLight:'#456673',sun:'#aac1d2',sunPower:.85,ambient:.7,exposure:1.05,windows:.65};
+ else if(state.genre==='romance'&&state.time==='night')theme={sky:'#4c3c55',fog:'#4c3c55',waterDeep:'#43576e',waterLight:'#baa5b0',sun:'#ffd1a0',sunPower:1.3,ambient:1.1,exposure:1.18,windows:2.4};
+ scene.background.set(theme.sky);
+ scene.fog=dark?new THREE.FogExp2(theme.fog,.028):new THREE.Fog(theme.fog,32,66);
+ sun.color.set(theme.sun);sun.intensity=theme.sunPower;ambient.intensity=theme.ambient;renderer.toneMappingExposure=theme.exposure;
+ windowMat.emissive.set(dark?'#a9c8d1':'#ffc978');windowMat.emissiveIntensity=theme.windows;
+ waterUniforms.uDeep.value.set(theme.waterDeep);waterUniforms.uLight.value.set(theme.waterLight);
+ $('sceneLabel').textContent=dark?'FOGBOUND HARBOR':{day:'SUNNY AFTERNOON',sunset:'GOLDEN HOUR',night:'A WARM NIGHT'}[state.time];
+ document.querySelectorAll('.time-option').forEach(button=>button.disabled=dark);
+ $('moodNote').hidden=!dark;
 }
 function applyPalette(){for(const {material,index} of buildingMaterials)material.color.set(palettes[state.palette][index]);document.querySelectorAll('.palette').forEach(button=>button.classList.toggle('active',button.dataset.palette===state.palette))}
 function setLighthouse(on,announce=true){
@@ -422,83 +426,71 @@ function setLighthouse(on,announce=true){
   beam.visible=on;
   if(announce)toast(on?'등대에 불이 켜졌어요 ✨':'등대 불빛이 꺼졌어요');
 }
-const storyPages=[
- {kicker:'프롤로그 · 해가 머무는 항구',title:'등대의 마지막 편지.',paragraphs:['그날 저녁, 항구의 모든 시계가 여섯 시에서 멈춘 듯했다.','내일이면 오래된 등대는 불을 끈다. 그런데 마지막 우편배는 아직 돌아오지 않았다.'],speaker:'항구의 오래된 이야기',dialogue:'그 밤의 일은, 지금도 누군가에게 편지가 된다.',action:'첫 장을 펼치다'},
- {kicker:'첫 번째 장 · 돌아온 사람',title:'윤은 다시 이곳에 서 있었다.',paragraphs:['십 년 만에 돌아온 항구에서도 소금 냄새는 그대로였다. 윤은 등대 난간에 손을 얹었다.','할아버지는 늘 이 시간에 바다를 바라보았다. 돌아올 배가 없어도 그랬다.'],speaker:'윤',dialogue:'“오늘 밤만큼은, 내가 곁에 있을게.”',action:'바다를 바라본다'},
- {kicker:'첫 번째 장 · 멀리서 온 불빛',title:'수평선이 한 번 깜박였다.',paragraphs:['별이라고 하기엔 낮았고, 파도라고 하기엔 규칙적이었다. 불빛은 켜졌다가, 잠시 머물렀다가, 다시 사라졌다.'],speaker:'바다',dialogue:'빛 하나. 그리고 긴 침묵.',action:'그 불빛을 오래 바라본다',alternate:'할아버지의 말을 떠올린다'},
- {kicker:'두 번째 장 · 작은 우편배',title:'봉투 한 통이 남아 있었다.',paragraphs:['밤이 내려앉자 작은 우편배의 윤곽이 드러났다. 젖은 돛 아래에서 누군가 봉투를 가슴에 안고 있었다.'],speaker:'우편배의 선장',dialogue:'“이 편지만은 오늘 도착해야 해요. 받는 사람이 오래 기다렸거든요.”',action:'낡은 항로를 따라 시선을 옮긴다'},
- {kicker:'두 번째 장 · 첫 불빛',title:'바다는 길을 기억하고 있었다.',paragraphs:['윤의 손끝 아래에서 첫 부표가 따뜻하게 밝아졌다.','어린 날 할아버지와 함께 세던 불빛이었다. 하나. 집으로 돌아오는 길의 시작.'],speaker:'윤의 기억',dialogue:'“아무리 멀리 가도, 첫 불빛은 여기 있단다.”',action:'두 번째 불빛으로 이어진다'},
- {kicker:'두 번째 장 · 두 번째 불빛',title:'멀리서 작은 답이 왔다.',paragraphs:['두 번째 부표가 켜지자 우편배도 한 번 빛을 보냈다.','윤은 자기도 모르게 웃었다. 바다 건너의 누군가와 같은 길을 보고 있다는 것이 이상하게 든든했다.'],speaker:'윤',dialogue:'“응. 여기 있어. 보고 있어.”',action:'마지막 불빛을 잇는다'},
- {kicker:'두 번째 장 · 이어진 길',title:'세 개의 빛이 한 문장이 되었다.',paragraphs:['마지막 부표가 밝아지자 어둠 속에 느슨한 선이 생겼다.','배에서 항구까지, 말로 적지 않은 한 문장. 윤은 그 문장을 천천히 읽었다.'],speaker:'불빛이 전한 말',dialogue:'여기로. 천천히. 돌아와.',action:'등대의 계단을 오른다'},
- {kicker:'세 번째 장 · 등대의 심장',title:'유리 속에 밤이 담겨 있었다.',paragraphs:['등대 꼭대기에서 윤은 차가운 손잡이를 잡았다. 기계는 오래된 숨처럼 낮게 울었다.','할아버지는 짧은 빛 두 번이면 충분하다고 했다. 기다리고 있다는 뜻이라고.'],speaker:'할아버지의 목소리',dialogue:'“불빛은 바다를 이기는 게 아니야. 혼자가 아니라는 걸 알려주는 거지.”',action:'첫 번째 빛을 보낸다'},
- {kicker:'세 번째 장 · 한 번의 응답',title:'빛은 바다 위를 건너갔다.',paragraphs:['등대가 크게 숨을 쉬듯 밝아졌다. 금빛이 검은 수면을 스치고, 우편배의 돛에 잠시 머물렀다.','윤은 손잡이를 놓지 않았다.'],speaker:'윤',dialogue:'“한 번 더. 우리가 기다리고 있다는 걸 알 수 있게.”',action:'두 번째 빛을 보낸다'},
- {kicker:'세 번째 장 · 돌아오는 시간',title:'배가 천천히 몸을 돌렸다.',paragraphs:['두 번째 빛이 닿자 작은 배가 고개를 돌렸다. 세 개의 부표를 따라, 익숙한 선착장 쪽으로.','윤은 아무 말도 하지 않았다. 돌아오는 것을 바라보는 데에도 시간이 필요했다.'],speaker:'윤',dialogue:'“이제 괜찮아.”',action:'봉투를 연다'},
- {kicker:'마지막 장 · 등대 앞으로',title:'편지에는 이름이 없었다.',paragraphs:['봉투에는 그저 ‘항구의 오래된 등대에게’라고 적혀 있었다.','윤이 편지를 펼치자 마을의 창마다 불이 들어왔다. 오늘 밤은 항구가 등대를 바라보고 있었다.'],speaker:'마지막 편지',dialogue:'“매일 밤 우리의 길을 밝혀줘서 고마워. 오늘은 우리가 너의 밤을 밝혀줄게.”',action:'마지막 문장을 읽는다'},
- {kicker:'에필로그 · 불빛이 남는 곳',title:'밤은 더 이상 어둡지 않았다.',paragraphs:['윤은 편지를 난간 위에 놓았다. 등대의 빛은 내일 꺼지겠지만, 누군가를 기다리는 마음까지 사라지는 건 아니었다.','항구에는 아직 돌아올 사람들의 자리가 남아 있었다.'],speaker:'이야기의 끝',dialogue:'어떤 불빛은, 눈을 감아도 오래 남는다.',action:'처음부터 다시 읽다'}
-];
 let flashUntil=0;
-function setTime(time){
- state.time=time;
- document.querySelectorAll('.time-option').forEach(el=>el.classList.toggle('active',el.dataset.time===time));
- applyTheme();
-}
+function setTime(time){state.time=time;document.querySelectorAll('.time-option').forEach(el=>el.classList.toggle('active',el.dataset.time===time));applyTheme()}
 function updateGameUI(){
- const page=state.page,data=storyPages[page];
- $('missionKicker').textContent=data.kicker;
- $('missionTitle').textContent=data.title;
+ const story=state.genre?STORIES[state.genre]:null,page=state.page;
+ const data=story?story.pages[page]:{kicker:'다섯 친구, 두 개의 밤',title:'어떤 밤에 머물까요?',paragraphs:['비숍과 테이트, 후니, 히스, 이브가 다시 항구에 모였다. 같은 풍경에서 두 개의 이야기가 시작된다.']};
+ document.body.dataset.genre=state.genre||'choose';
+ document.title='Harbor Jelly — '+(story?story.title:'Bishop & Friends');
+ $('storyEyebrow').textContent=story?story.eyebrow:'BISHOP & FRIENDS';
+ $('missionKicker').textContent=data.kicker;$('missionTitle').textContent=data.title;
  const paragraphs=[...data.paragraphs];
- if(page===3&&state.choice==='memory')paragraphs.unshift('“두 번 깜박이면 기다리고 있다는 뜻이야.” 할아버지의 말이 그제야 돌아왔다.');
- if(page===11&&state.choice==='memory')paragraphs[1]='윤은 이제 알았다. 할아버지가 돌아올 배가 없는 날에도 바다를 바라보던 이유를.';
+ if(story&&page===3&&state.choice==='memory')paragraphs.unshift(story.branchText);
+ if(story&&page===11&&state.choice==='memory')paragraphs[1]=story.branchEnding;
  $('storyProse').replaceChildren(...paragraphs.map(text=>{const p=document.createElement('p');p.textContent=text;return p}));
- $('dialogueSpeaker').textContent=data.speaker;
- $('dialogueText').textContent=data.dialogue;
- $('stageCounter').textContent=String(page+1).padStart(2,'0')+' / 12';
- $('progressBar').style.width=((page+1)/12*100)+'%';
- const waiting=page===9&&!state.arrivalReady;
- $('primaryAction').disabled=waiting;
- $('primaryAction').textContent=waiting?'배가 가까워지고 있다…':data.action+' →';
- $('secondaryAction').hidden=!data.alternate;
- $('secondaryAction').textContent=data.alternate||'';
- $('previousAction').disabled=page===0;
- $('readingStatus').textContent=waiting?'문장 너머에서 배가 돌아오는 중':page===2?'어느 쪽에 마음이 머무나요':page===11?'끝 · 풍경은 조금 더 머물러도 좋아요':'← → 키로도 넘길 수 있어요';
- const card=document.querySelector('.reading-card');card.classList.remove('page-turn');void card.offsetWidth;card.classList.add('page-turn');
- fitReader();
+ $('storyDialogue').hidden=!story;
+ const speaker=CHARACTERS[data.speaker];
+ $('dialogueSpeaker').textContent=speaker?speaker.ko+' · '+speaker.name:data.speaker||'';
+ $('dialogueSpeaker').style.color=speaker?speaker.color:'';
+ $('dialogueText').textContent=data.dialogue||'';
+ $('stageCounter').textContent=story?String(page+1).padStart(2,'0')+' / 12':'두 개의 이야기';
+ $('progressBar').style.width=story?((page+1)/12*100)+'%':'0%';
+ const waiting=story&&page===9&&!state.arrivalReady;
+ $('primaryAction').hidden=!story;$('primaryAction').disabled=!!waiting;$('primaryAction').textContent=waiting?'배가 가까워지고 있다…':(data.action||'')+' →';
+ $('secondaryAction').hidden=!data.alternate;$('secondaryAction').textContent=data.alternate||'';
+ $('previousAction').disabled=!story||page===0;
+ $('genreChoices').hidden=!!story;$('changeGenre').hidden=!story;
+ $('readingStatus').textContent=waiting?'안개 너머에서 배가 돌아오는 중':!story?'인물의 얼굴을 눌러 만나보세요':page===2?'어느 쪽에 마음이 머무나요':page===11?'끝 · 다른 이야기도 펼쳐보세요':'← → 키로도 넘길 수 있어요';
+ if(waiting&&state.genre==='romance')$('readingStatus').textContent='불빛을 따라 배가 돌아오는 중';
+ const card=document.querySelector('.reading-card');card.scrollTop=0;card.classList.remove('page-turn');void card.offsetWidth;card.classList.add('page-turn');fitReader();
 }
 function clearRoute(){
  routeGlow.children.forEach(mesh=>{mesh.geometry.dispose();mesh.material.dispose()});routeGlow.clear();
- routeBuoys.forEach(b=>{b.lit=false;b.light.intensity=0;b.lamp.emissiveIntensity=.2;b.group.scale.setScalar(1);b.group.visible=state.page>=3});
+ routeBuoys.forEach(b=>{b.lit=false;b.light.intensity=0;b.lamp.emissiveIntensity=.2;b.group.scale.setScalar(1);b.group.visible=!!state.genre&&state.page>=3});
 }
 function setStoryPage(page){
+ if(!state.genre){showGenrePicker();return}
  state.page=Math.max(0,Math.min(11,page));
- setTime(state.page>=3?'night':'sunset');
- clearRoute();
- for(let i=0;i<Math.min(3,Math.max(0,state.page-3));i++)lightRoute(i);
- setLighthouse(state.page>=8,false);
+ setTime(state.genre==='mystery'||state.page>=7?'night':'sunset');
+ clearRoute();for(let i=0;i<Math.min(3,Math.max(0,state.page-3));i++)lightRoute(i);
+ setLighthouse(state.genre==='mystery'?state.page===7||state.page===8:state.page>=8,false);
  if(state.page===8||state.page===9)flashUntil=performance.now()/1000+.6;
- state.returning=state.page>=9;
- state.returnProgress=state.page>=10?1:0;
- state.arrivalReady=state.page>=10;
- celebrationLights.forEach(l=>l.mesh.visible=state.page>=10);
- if(state.page>=10)windowMat.emissiveIntensity=4.5;
- revealStoryObjects();
- updateGameUI();
- focusStoryPage();
+ state.returning=state.page>=9;state.returnProgress=state.page>=10?1:0;state.arrivalReady=state.page>=10;
+ celebrationLights.forEach(l=>l.mesh.visible=state.genre==='romance'&&state.page>=10);
+ if(state.genre==='romance'&&state.page>=10)windowMat.emissiveIntensity=4.5;
+ revealStoryObjects();updateGameUI();focusStoryPage();
 }
-function nextStory(choice){
- if(state.page===9&&!state.arrivalReady)return;
- if(state.page===2)state.choice=choice||'signal';
- if(state.page===11){resetGame();return}
- setStoryPage(state.page+1);
+function chooseGenre(genre){
+ state.genre=genre;state.choice='signal';state.palette=genre==='mystery'?'coastal':'candy';applyPalette();writeStoryLetter();
+ document.body.classList.remove('reading-hidden');$('toggleReading').textContent='풍경만 보기';$('toggleReading').setAttribute('aria-expanded','true');setStoryPage(0);
 }
-function resetGame(){state.choice='signal';setStoryPage(0)}
-function fitReader(){
- if(window.innerWidth<=900){
-  const stage=document.querySelector('.novel-stage'),card=document.querySelector('.reading-card');
-  wrap.style.top=(card.offsetTop+card.offsetHeight+8)+'px';
- }else wrap.style.top='';
+function showGenrePicker(){
+ state.genre=null;state.page=0;state.returning=false;state.returnProgress=0;state.arrivalReady=false;state.palette='candy';applyPalette();setTime('sunset');clearRoute();setLighthouse(false,false);
+ celebrationLights.forEach(l=>l.mesh.visible=false);revealStoryObjects();updateGameUI();focusStoryPage();
 }
+function nextStory(choice){if(!state.genre)return;if(state.page===9&&!state.arrivalReady)return;if(state.page===2)state.choice=choice||'signal';if(state.page===11){showGenrePicker();return}setStoryPage(state.page+1)}
+function resetGame(){if(state.genre){state.choice='signal';setStoryPage(0)}else showGenrePicker()}
+function fitReader(){wrap.style.top='';resize()}
 new ResizeObserver(fitReader).observe(document.querySelector('.reading-card'));
 window.addEventListener('resize',fitReader);
+let selectedCharacter='Bishop';
+function openCharacter(id){
+ selectedCharacter=id;const person=CHARACTERS[id];$('characterPortrait').innerHTML=portraitSvg(id);$('characterName').textContent=person.name+' · '+person.ko;$('characterRole').textContent=person.role;$('characterDescription').textContent=person.description;if(!$('characterDialog').open)$('characterDialog').showModal();
+}
+for(const [id,person] of Object.entries(CHARACTERS)){
+ const button=document.createElement('button');button.type='button';button.setAttribute('aria-label',person.name+' '+person.ko+' 인물 소개');button.innerHTML=portraitSvg(id)+'<span>'+person.name+'</span>';button.addEventListener('click',()=>openCharacter(id));$('castRoster').append(button);
+}
 function spawnFish(x,z){
   const group=new THREE.Group();
   group.position.set(x,.1,z);
@@ -523,8 +515,9 @@ function sceneClick(event){
   const hits=raycaster.intersectObjects(visibleTargets,false);
   if(!hits.length)return;
   const hit=hits[0];
+  if(hit.object.userData.action==='character'){openCharacter(hit.object.userData.character);return}
   if(hit.object.userData.action==='lighthouse'){if(state.page===7||state.page===8)nextStory();else setLighthouse(!state.lighthouseOn);return}
-  if(hit.object.userData.action==='ship'){if(state.page===2)nextStory('signal');else toast('선장은 마지막 편지를 품고 있었다.');return}
+  if(hit.object.userData.action==='ship'){if(state.page===2)nextStory('signal');else toast('후니는 작은 봉투를 품고 있었다.');return}
   if(hit.object.userData.action==='letter'){if(state.page===10)nextStory();return}
   if(hit.object.userData.action==='buoy'){const index=hit.object.userData.index;if(state.page===index+3)nextStory();else{lightRoute(index);toast('바다 위에 작은 불빛이 남았다.')}return}
   if(hit.object===waterMesh){touchWater(hit.point)}
@@ -535,11 +528,20 @@ function resize(){
   if(!rect.width||!rect.height)return;
   const aspect=rect.width/rect.height;
   const span=Math.max(13.5,(window.innerWidth<=900?22:21.2)/aspect);
-  camera.left=-span*aspect/2;camera.right=span*aspect/2;
-  camera.top=span/2;camera.bottom=-span/2;
-  camera.updateProjectionMatrix();
+  const card=document.querySelector('.reading-card').getBoundingClientRect();
+  const hidden=document.body.classList.contains('reading-hidden');
+  screenFrame.span=span;screenFrame.aspect=aspect;
+  screenFrame.focusX=!hidden&&window.innerWidth>900?.5+Math.min(card.right,rect.width*.43)/2/rect.width:.5;
+  screenFrame.focusY=!hidden&&window.innerWidth<=900?Math.min(.78,(card.bottom+rect.height-80)/2/rect.height):.5;
+  applyCameraFraming();
   renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2.25));
   renderer.setSize(rect.width,rect.height,false);
+}
+function applyCameraFraming(){
+ const {span,aspect,focusX,focusY}=screenFrame;
+ const shiftX=(.5-focusX)*span*aspect/camera.zoom,shiftY=(focusY-.5)*span/camera.zoom;
+ camera.left=-span*aspect/2+shiftX;camera.right=span*aspect/2+shiftX;
+ camera.top=span/2+shiftY;camera.bottom=-span/2+shiftY;camera.updateProjectionMatrix();
 }
 const observer=new ResizeObserver(resize);observer.observe(wrap);resize();
 
@@ -547,8 +549,10 @@ function animate(ms){
   const dt=Math.min((ms-lastFrame)/1000,.05);lastFrame=ms;
   const t=ms/1000;
   director.update(ms,dt);
+  applyCameraFraming();
   controls.update();
   animateStoryObjects(t,dt);
+  mist.update(t,state.genre==='mystery');
   waterUniforms.uTime.value=t;
   waterUniforms.uAmplitude.value=.014+state.waves*.00125;
   state.ripples=state.ripples.filter(r=>t-r.start<2.4);
@@ -567,7 +571,8 @@ function animate(ms){
   returnBoat.position.set(boatPoint.x,.19+Math.sin(t*1.7)*.028,boatPoint.z);
   returnBoat.rotation.y=state.returning?-Math.atan2(boatAhead.z-boatPoint.z,boatAhead.x-boatPoint.x):0;
   if(state.page===9&&p>=1&&!state.arrivalReady){state.arrivalReady=true;updateGameUI()}
-  for(const bird of birds){bird.line.visible=state.birds;bird.line.position.x=bird.baseX+Math.sin(t*.35+bird.phase)*.48;bird.line.position.y=4.1+Math.sin(t*1.2+bird.phase)*.14;bird.line.rotation.z=Math.sin(t*2+bird.phase)*.16}
+  cast.update(t,dt,returnBoat);
+  for(const bird of birds){bird.line.visible=state.birds&&state.genre!=='mystery';bird.line.position.x=bird.baseX+Math.sin(t*.35+bird.phase)*.48;bird.line.position.y=4.1+Math.sin(t*1.2+bird.phase)*.14;bird.line.rotation.z=Math.sin(t*2+bird.phase)*.16}
   for(let i=state.fish.length-1;i>=0;i--){const fish=state.fish[i],age=t-fish.start;if(age>1.05){world.remove(fish.group);state.fish.splice(i,1)}else{fish.group.position.y=.09+Math.sin(age/1.05*Math.PI)*.66;fish.group.rotation.z=-age*1.8}}
   if(state.lighthouseOn){
     const source=new THREE.Vector3(5.82,3.43,1.87),dir=new THREE.Vector3(Math.cos(t*.55),-.22,Math.sin(t*.55)).normalize();
@@ -583,7 +588,7 @@ function animate(ms){
   renderer.render(scene,camera);
   requestAnimationFrame(animate);
 }
-applyPalette();setStoryPage(0);requestAnimationFrame(animate);
+showGenrePicker();requestAnimationFrame(animate);
 
 canvas.addEventListener('pointerdown',event=>{pointerStart={x:event.clientX,y:event.clientY}});
 canvas.addEventListener('pointerup',event=>{if(pointerStart&&Math.hypot(event.clientX-pointerStart.x,event.clientY-pointerStart.y)<7)sceneClick(event);pointerStart=null});
@@ -597,16 +602,23 @@ $('lighthouseToggle').addEventListener('change',event=>setLighthouse(event.targe
 $('resetView').addEventListener('click',focusStoryPage);
 $('zoomIn').addEventListener('click',()=>director.zoom(1.22));
 $('zoomOut').addEventListener('click',()=>director.zoom(1/1.22));
-$('overviewView').addEventListener('click',()=>{$('shotLabel').textContent='항구 전체 보기';director.move(storyShots[0])});
+$('overviewView').addEventListener('click',()=>{$('shotLabel').textContent='항구 전체 보기';director.move(overviewShot)});
 $('downloadImage').addEventListener('click',()=>{renderer.render(scene,camera);const link=document.createElement('a');link.download='harbor-jelly-3d.png';link.href=canvas.toDataURL('image/png');link.click()});
 $('primaryAction').addEventListener('click',()=>nextStory('signal'));
 $('secondaryAction').addEventListener('click',()=>nextStory('memory'));
 $('previousAction').addEventListener('click',()=>setStoryPage(state.page-1));
 $('restartButton').addEventListener('click',resetGame);
 document.addEventListener('keydown',event=>{
- if(['BUTTON','INPUT','SUMMARY'].includes(document.activeElement?.tagName)||$('aboutDialog').open)return;
+ if(['BUTTON','INPUT','SUMMARY'].includes(document.activeElement?.tagName)||$('aboutDialog').open||$('characterDialog').open)return;
  if(event.code==='ArrowRight'){event.preventDefault();nextStory('signal')}
  if(event.code==='ArrowLeft'&&state.page>0){event.preventDefault();setStoryPage(state.page-1)}
 });
 $('aboutButton').addEventListener('click',()=>$('aboutDialog').showModal());
 $('closeAbout').addEventListener('click',()=>$('aboutDialog').close());
+
+$('chooseMystery').addEventListener('click',()=>chooseGenre('mystery'));
+$('chooseRomance').addEventListener('click',()=>chooseGenre('romance'));
+$('changeGenre').addEventListener('click',showGenrePicker);
+$('closeCharacter').addEventListener('click',()=>$('characterDialog').close());
+$('focusCharacter').addEventListener('click',()=>{$('characterDialog').close();const target=cast.focus(selectedCharacter);$('shotLabel').textContent=CHARACTERS[selectedCharacter].name+' · '+CHARACTERS[selectedCharacter].ko;director.move({target:target.toArray(),theta:.05,phi:1.18,zoom:4,duration:1600})});
+$('toggleReading').addEventListener('click',()=>{const hidden=document.body.classList.toggle('reading-hidden');$('toggleReading').textContent=hidden?'이야기 보기':'풍경만 보기';$('toggleReading').setAttribute('aria-expanded',String(!hidden));fitReader()});

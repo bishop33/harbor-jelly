@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#f4f0e7">
-<meta name="description" content="풍경과 문장이 함께 흐르는 작은 3D 인터랙티브 소설, 등대의 마지막 편지.">
-<title>Harbor Jelly — 등대의 마지막 편지</title>
+<meta name="description" content="비숍과 테이트, 후니, 히스, 이브. 전체 화면 3D 항구에서 미스터리와 로맨스, 두 편의 인터랙티브 소설을 선택하세요.">
+<title>Harbor Jelly — Bishop & Friends</title>
 <link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./interactive.css"><link rel="stylesheet" href="./world.css">
 </head>
 <body>
@@ -12,7 +12,7 @@
 <header class="topbar">
 <a class="brand" href="#top" aria-label="Harbor Jelly 홈"><span class="brand-mark">✳</span><span>Harbor <i>Jelly.</i></span></a>
 <span class="top-center"><span class="live-dot"></span> AN INTERACTIVE SHORT STORY</span>
-<button class="about-link" id="aboutButton" type="button">이 세계에 대해 <span>↗</span></button>
+<div class="header-actions"><button class="about-link" id="toggleReading" type="button" aria-expanded="true">풍경만 보기</button><button class="about-link" id="aboutButton" type="button">이 세계에 대해 <span>↗</span></button></div>
 </header>
 <main id="top" class="novel-stage">
 <div class="canvas-wrap" id="canvasWrap">
@@ -23,13 +23,15 @@
 <div class="camera-caption"><span id="cameraStatus" role="status">이야기의 시선</span><strong id="shotLabel">항구 전경</strong></div>
 <div class="drag-hint">드래그로 회전 · 스크롤이나 두 손가락으로 확대</div>
 </div>
-<section class="reading-card" aria-label="등대의 마지막 편지 이야기">
-<div class="reading-top"><span>HARBOR JELLY · CHAPTER 01</span><span id="stageCounter">01 / 12</span></div>
+<section class="reading-card" aria-label="Bishop과 친구들의 이야기">
+<div class="reading-top"><span id="storyEyebrow">BISHOP & FRIENDS</span><button id="changeGenre" type="button" hidden>다른 밤 선택</button><span id="stageCounter">두 개의 이야기</span></div>
 <div class="mission-progress"><span id="progressBar"></span></div>
 <p class="mission-kicker" id="missionKicker">프롤로그</p>
 <h1 id="missionTitle">등대의 마지막 편지.</h1>
 <div class="story-prose" id="storyProse"></div>
 <blockquote class="story-dialogue" id="storyDialogue"><span id="dialogueSpeaker"></span><p id="dialogueText"></p></blockquote>
+<div class="genre-choices" id="genreChoices"><button id="chooseMystery" type="button" data-genre="mystery"><small>01 / MYSTERY</small><strong>미스터리</strong><span>여섯 번째 초대장 · 안개 속의 목소리</span></button><button id="chooseRomance" type="button" data-genre="romance"><small>02 / ROMANCE</small><strong>로맨스</strong><span>미처 부치지 못한 마음 · 비숍과 이브</span></button></div>
+<div class="cast-roster" id="castRoster" aria-label="등장인물"></div>
 <div class="story-actions">
 <button class="primary-action" id="primaryAction" type="button">첫 장을 펼치다 <span>→</span></button>
 <button class="secondary-action" id="secondaryAction" type="button" hidden></button>
@@ -38,6 +40,7 @@
 </section>
 <div class="settings-popover"><details class="settings-drawer"><summary>내 항구 꾸미기 <span>시간 · 물결 · 색깔</span></summary>
 <div class="settings-body">
+<p class="mood-note" id="moodNote" hidden>미스터리의 밤은 짙은 안개 속에 머뭅니다.</p>
 <div class="setting-label">시간</div>
 <div class="time-options" role="group" aria-label="시간 선택">
 <button class="time-option" data-time="day" type="button"><span class="time-icon">☀</span><span>낮</span></button>
@@ -52,7 +55,8 @@
 </div></details></div>
 </main>
 </div>
-<dialog id="aboutDialog"><button id="closeAbout" class="dialog-close" type="button" aria-label="닫기">×</button><span class="eyebrow">ABOUT THIS LITTLE WORLD</span><h2>Harbor Jelly.</h2><p>오래된 등대의 마지막 밤, 편지 한 통을 싣고 돌아오는 우편배, 그리고 다시 항구를 찾은 윤. 풍경과 문장이 함께 흐르는 작은 인터랙티브 소설입니다.</p><p>문장을 넘기면 시간이 흐르고, 불빛이 이어지고, 배가 돌아옵니다. 이야기 속 선택에 따라 윤이 기억하는 장면도 조금 달라집니다.</p></dialog>
+<dialog id="aboutDialog"><button id="closeAbout" class="dialog-close" type="button" aria-label="닫기">×</button><span class="eyebrow">ABOUT THIS LITTLE WORLD</span><h2>Harbor Jelly.</h2><p>비숍, 테이트, 후니, 히스, 이브. 다섯 친구가 같은 항구에서 서로 다른 밤을 마주합니다. 어두운 안개 속의 미스터리와 따뜻한 불빛 사이의 로맨스, 두 편의 인터랙티브 소설입니다.</p><p>이야기를 넘기면 카메라와 인물, 불빛이 함께 움직입니다. 인물을 눌러 만나고, 화면을 직접 돌려보거나 ‘풍경만 보기’로 항구 전체를 탐험할 수 있습니다.</p></dialog>
+<dialog id="characterDialog"><button id="closeCharacter" class="dialog-close" type="button" aria-label="인물 소개 닫기">×</button><div id="characterPortrait" class="character-portrait"></div><span class="eyebrow" id="characterRole"></span><h2 id="characterName"></h2><p id="characterDescription"></p><button class="primary-action" id="focusCharacter" type="button">장면에서 만나기 →</button></dialog>
 <script type="importmap">{"imports":{"three":"./vendor/three.module.js","three/addons/":"./vendor/"}}</script>
 <script type="module" src="./app3d.js"></script>
 </body>
