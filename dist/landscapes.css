@@ -2,3 +2,5 @@
 @media(max-width:650px){header{height:94px;padding-bottom:36px}.landscape-nav{top:67px;gap:3px;padding:3px}.landscape-nav a{padding:6px 23px;font-size:10px}main{top:94px}.nature-page .intro h1{font-size:47px;letter-spacing:-3px}.nature-page .intro p{margin-top:4px}.nature-page .view-tools{max-width:none}.nature-page .tips small{max-width:170px}.nature-page .tips #tip{max-width:185px;line-height:1.5}.nature-page .panel-body>.description{margin:16px 0;font-size:11px}}
 
 .nature-page.focused-view .intro{top:4%}.nature-page.focused-view .intro p,.nature-page.focused-view .intro>span{display:none}.nature-page.focused-view .intro h1{font-size:32px;letter-spacing:-1.5px;margin:0}.nature-page.focused-view .intro h1 br{display:none}.nature-page.focused-view .intro h1 em{margin-left:.2em}
+
+footer a{color:inherit;font-size:10px;letter-spacing:0;text-decoration:none}footer a:hover{color:#577061}footer a:focus-visible{outline:2px solid #829674;outline-offset:4px}
