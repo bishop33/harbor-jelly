@@ -1,63 +1,21 @@
-<!doctype html>
-<html lang="ko">
-<head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#f4f0e7">
-<meta name="description" content="비숍과 테이트, 후니, 히스, 이브. 전체 화면 3D 항구에서 미스터리와 로맨스, 두 편의 인터랙티브 소설을 선택하세요.">
-<title>Harbor Jelly — Bishop & Friends</title>
-<link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./interactive.css"><link rel="stylesheet" href="./world.css">
-</head>
-<body>
-<div class="app-shell">
-<header class="topbar">
-<a class="brand" href="#top" aria-label="Harbor Jelly 홈"><span class="brand-mark">✳</span><span>Harbor <i>Jelly.</i></span></a>
-<span class="top-center"><span class="live-dot"></span> AN INTERACTIVE SHORT STORY</span>
-<div class="header-actions"><button class="about-link" id="toggleReading" type="button" aria-expanded="true">풍경만 보기</button><button class="about-link" id="aboutButton" type="button">이 세계에 대해 <span>↗</span></button></div>
-</header>
-<main id="top" class="novel-stage">
-<div class="canvas-wrap" id="canvasWrap">
-<canvas id="scene" aria-label="이야기와 함께 변하는 3D 항구와 등대섬"></canvas>
-<div class="scene-badge"><span class="live-dot"></span><span id="sceneLabel">GOLDEN HOUR</span></div>
-<div class="canvas-actions"><button class="circle-button" id="zoomOut" type="button" aria-label="축소">−</button><button class="circle-button" id="zoomIn" type="button" aria-label="확대">+</button><button class="circle-button" id="resetView" type="button" aria-label="현재 이야기 장면 다시 보기" title="현재 이야기 장면 다시 보기">⟲</button><button class="circle-button" id="overviewView" type="button" aria-label="항구 전체 보기" title="항구 전체 보기">⌖</button><button class="circle-button" id="downloadImage" type="button" aria-label="장면 이미지 저장">↓</button></div>
-<div class="interaction-toast" id="interactionToast" role="status" aria-live="polite"></div>
-<div class="camera-caption"><span id="cameraStatus" role="status">이야기의 시선</span><strong id="shotLabel">항구 전경</strong></div>
-<div class="drag-hint">드래그로 회전 · 스크롤이나 두 손가락으로 확대</div>
-</div>
-<section class="reading-card" aria-label="Bishop과 친구들의 이야기">
-<div class="reading-top"><span id="storyEyebrow">BISHOP & FRIENDS</span><button id="changeGenre" type="button" hidden>다른 밤 선택</button><span id="stageCounter">두 개의 이야기</span></div>
-<div class="mission-progress"><span id="progressBar"></span></div>
-<p class="mission-kicker" id="missionKicker">프롤로그</p>
-<h1 id="missionTitle">등대의 마지막 편지.</h1>
-<div class="story-prose" id="storyProse"></div>
-<blockquote class="story-dialogue" id="storyDialogue"><span id="dialogueSpeaker"></span><p id="dialogueText"></p></blockquote>
-<div class="genre-choices" id="genreChoices"><button id="chooseMystery" type="button" data-genre="mystery"><small>01 / MYSTERY</small><strong>미스터리</strong><span>여섯 번째 초대장 · 안개 속의 목소리</span></button><button id="chooseRomance" type="button" data-genre="romance"><small>02 / ROMANCE</small><strong>로맨스</strong><span>미처 부치지 못한 마음 · 비숍과 이브</span></button></div>
-<div class="cast-roster" id="castRoster" aria-label="등장인물"></div>
-<div class="story-actions">
-<button class="primary-action" id="primaryAction" type="button">첫 장을 펼치다 <span>→</span></button>
-<button class="secondary-action" id="secondaryAction" type="button" hidden></button>
-</div>
-<div class="reading-bottom"><button id="previousAction" type="button" disabled>← 앞 문장</button><span id="readingStatus" role="status">천천히 읽어도 괜찮아요</span><button id="restartButton" type="button" aria-label="이야기 처음부터">↻</button></div>
-</section>
-<div class="settings-popover"><details class="settings-drawer"><summary>내 항구 꾸미기 <span>시간 · 물결 · 색깔</span></summary>
-<div class="settings-body">
-<p class="mood-note" id="moodNote" hidden>미스터리의 밤은 짙은 안개 속에 머뭅니다.</p>
-<div class="setting-label">시간</div>
-<div class="time-options" role="group" aria-label="시간 선택">
-<button class="time-option" data-time="day" type="button"><span class="time-icon">☀</span><span>낮</span></button>
-<button class="time-option active" data-time="sunset" type="button"><span class="time-icon">◒</span><span>노을</span></button>
-<button class="time-option" data-time="night" type="button"><span class="time-icon">☾</span><span>밤</span></button>
-</div>
-<div class="setting-label wave-label">물결 <strong id="waveValue">40%</strong></div>
-<input id="waveRange" type="range" min="0" max="100" value="40" aria-label="물결 강도">
-<div class="setting-label palette-label">색깔</div>
-<div class="palette-row"><button class="palette active" data-palette="candy" type="button" aria-label="파스텔 색깔"><i style="background:#eea591"></i><i style="background:#f2c75c"></i><i style="background:#8bc4b0"></i></button><button class="palette" data-palette="coastal" type="button" aria-label="해안 색깔"><i style="background:#789aba"></i><i style="background:#e6ddd0"></i><i style="background:#bba37b"></i></button><button class="palette" data-palette="bright" type="button" aria-label="선명한 색깔"><i style="background:#ec734d"></i><i style="background:#f8d848"></i><i style="background:#69a3ce"></i></button></div>
-<div class="ambient-switches"><label><input id="boatsToggle" type="checkbox" checked> 주변의 배</label><label><input id="birdsToggle" type="checkbox" checked> 갈매기</label><label><input id="lighthouseToggle" type="checkbox"> 등대 불빛</label></div>
-</div></details></div>
-</main>
-</div>
-<dialog id="aboutDialog"><button id="closeAbout" class="dialog-close" type="button" aria-label="닫기">×</button><span class="eyebrow">ABOUT THIS LITTLE WORLD</span><h2>Harbor Jelly.</h2><p>비숍, 테이트, 후니, 히스, 이브. 다섯 친구가 같은 항구에서 서로 다른 밤을 마주합니다. 어두운 안개 속의 미스터리와 따뜻한 불빛 사이의 로맨스, 두 편의 인터랙티브 소설입니다.</p><p>이야기를 넘기면 카메라와 인물, 불빛이 함께 움직입니다. 인물을 눌러 만나고, 화면을 직접 돌려보거나 ‘풍경만 보기’로 항구 전체를 탐험할 수 있습니다.</p></dialog>
-<dialog id="characterDialog"><button id="closeCharacter" class="dialog-close" type="button" aria-label="인물 소개 닫기">×</button><div id="characterPortrait" class="character-portrait"></div><span class="eyebrow" id="characterRole"></span><h2 id="characterName"></h2><p id="characterDescription"></p><button class="primary-action" id="focusCharacter" type="button">장면에서 만나기 →</button></dialog>
-<script type="importmap">{"imports":{"three":"./vendor/three.module.js","three/addons/":"./vendor/"}}</script>
-<script type="module" src="./app3d.js"></script>
-</body>
-</html>
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#f1eee5"><title>Harbor Jelly — 작은 항구의 하루</title><meta name="description" content="투명한 젤리 바다 속에서 움직이는 작은 항구. 컨테이너 하역, 예인선, 화물선과 물고기까지 직접 만져보는 실시간 3D 미니어처."><link rel="stylesheet" href="./assets/fonts/fonts.css"><link rel="stylesheet" href="./harbor.css"></head><body>
+<header><span class="eyebrow">MATERIAL STUDIES <i>/</i> NO. 01</span><span class="live"><i></i> 작은 항구의 하루</span></header>
+<main><canvas id="harbor" aria-label="회전 가능한 3D 항구. 수면을 드래그하면 파문이 생기고 블록 옆면을 드래그하면 기울어집니다."></canvas>
+<div class="intro"><p>AN INTERACTIVE MINIATURE</p><h1>Harbor<br><em>Jelly.</em></h1><span>물결 속에,<br>작은 하루가 흐릅니다.</span></div>
+<aside class="panel"><button class="panel-toggle" aria-expanded="false">항구 조작하기<span>열기</span></button><div class="panel-body">
+<div class="panel-heading"><span>THE HARBOR</span><button id="view" aria-label="시점 초기화"><img src="./assets/icons/crosshair.svg" alt=""></button></div>
+<p class="ship-status" id="status" role="status">하역 중</p><div class="activity"><span id="activity"></span></div>
+<button class="primary" id="sail"><span>일찍 출항하기</span><img src="./assets/icons/arrow-right.svg" alt=""></button>
+<div class="actions"><button id="horn">경적 울리기 <kbd>SPACE</kbd></button><button id="feed">물고기 먹이 주기</button></div>
+<div class="metrics"><div><strong id="boxes">0</strong><span>옮긴 상자</span></div><div><strong id="voyages">0</strong><span>항해</span></div><div><strong id="fed">0</strong><span>먹이</span></div></div>
+<div class="label">바다의 색 <span id="flavour">Sea glass</span></div><div class="swatches" aria-label="바다 색깔"><button data-flavour="glass" class="active" aria-pressed="true">Sea glass</button><button data-flavour="blue" aria-pressed="false">Blueberry</button><button data-flavour="lime" aria-pressed="false">Lime</button></div>
+<label class="range-label" for="firmness">탱글함 <span id="firmValue">40%</span></label><input id="firmness" type="range" min="0" max="100" value="40">
+<label class="range-label" for="damping">물결의 감쇠 <span id="dampValue">35%</span></label><input id="damping" type="range" min="0" max="100" value="35">
+<label class="range-label" for="tide">수위 <span id="tideValue">0 cm</span></label><input id="tide" type="range" min="-14" max="14" value="0">
+<div class="bottom-actions"><button id="reset">처음으로</button><button id="pause" aria-pressed="false">잠시 멈춤</button><button id="sound" aria-pressed="false">소리 끔</button></div>
+</div></aside>
+<div class="tips"><span id="tip">물 위를 드래그하면 파문이 생겨요.</span><small>빈 공간 / 오른쪽 드래그로 회전 · 스크롤로 확대</small></div><div class="view-tools"><button data-view="wide">전체</button><button data-view="port">하역장</button><button data-view="sea">수중</button><button data-view="light">등대</button></div>
+<div class="error" id="error" hidden><h2>항구의 불이 켜지지 않았어요.</h2><p>WebGL을 사용할 수 있는 브라우저에서 다시 열어주세요.</p></div></main>
+<footer><span>LIGHT, WATER & LITTLE THINGS.</span><button id="about">이 항구에 대해</button></footer>
+<dialog id="aboutDialog"><button id="closeAbout" aria-label="닫기"><img src="./assets/icons/x.svg" alt=""></button><p class="eyebrow">THIS LITTLE WORLD</p><h2>Harbor Jelly.</h2><p>크레인이 상자를 옮기고, 예인선이 배를 이끌고, 화물선이 다시 돌아옵니다. 수면 아래에는 물고기와 해파리, 작은 해초와 오래된 닻이 숨어 있어요.</p><p>수면을 쓸어 파문을 만들고, 바다 블록의 옆면을 기울여보세요. 주황색 구명환은 잡아서 던질 수 있습니다. 먹이를 주거나 경적을 울리면 생물들이 반응합니다.</p><p>Three.js와 WebGL로 그리는 실시간 3D 장면입니다. 움직임과 재질은 브라우저에서 계산됩니다.</p></dialog>
+<script type="importmap">{"imports":{"three":"./vendor/three.module.js","three/addons/":"./vendor/"}}</script><script type="module" src="./harbor.js"></script></body></html>

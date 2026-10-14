@@ -30,6 +30,11 @@ jobs:
           node --check dist/characters.js
           node --check dist/stories.js
           node --check dist/atmosphere.js
+          node --check dist/harbor.js
+          node --check dist/harbor-world.js
+          node --check dist/harbor-sim.js
+          node --check dist/harbor-motion.js
+          npm test
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
       - name: Upload static site
