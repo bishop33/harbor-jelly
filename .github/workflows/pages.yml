@@ -34,6 +34,9 @@ jobs:
           node --check dist/harbor-world.js
           node --check dist/harbor-sim.js
           node --check dist/harbor-motion.js
+          node --check dist/nature.js
+          node --check dist/nature-world.js
+          node --check dist/landscape-math.js
           npm test
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
