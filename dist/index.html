@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#f4f0e7">
+<meta name="description" content="풍경과 문장이 함께 흐르는 작은 3D 인터랙티브 소설, 등대의 마지막 편지.">
+<title>Harbor Jelly — 등대의 마지막 편지</title>
+<link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./interactive.css"><link rel="stylesheet" href="./world.css">
+</head>
+<body>
+<div class="app-shell">
+<header class="topbar">
+<a class="brand" href="#top" aria-label="Harbor Jelly 홈"><span class="brand-mark">✳</span><span>Harbor <i>Jelly.</i></span></a>
+<span class="top-center"><span class="live-dot"></span> AN INTERACTIVE SHORT STORY</span>
+<button class="about-link" id="aboutButton" type="button">이 세계에 대해 <span>↗</span></button>
+</header>
+<main id="top" class="novel-stage">
+<div class="canvas-wrap" id="canvasWrap">
+<canvas id="scene" aria-label="이야기와 함께 변하는 3D 항구와 등대섬"></canvas>
+<div class="scene-badge"><span class="live-dot"></span><span id="sceneLabel">GOLDEN HOUR</span></div>
+<div class="canvas-actions"><button class="circle-button" id="zoomOut" type="button" aria-label="축소">−</button><button class="circle-button" id="zoomIn" type="button" aria-label="확대">+</button><button class="circle-button" id="resetView" type="button" aria-label="현재 이야기 장면 다시 보기" title="현재 이야기 장면 다시 보기">⟲</button><button class="circle-button" id="overviewView" type="button" aria-label="항구 전체 보기" title="항구 전체 보기">⌖</button><button class="circle-button" id="downloadImage" type="button" aria-label="장면 이미지 저장">↓</button></div>
+<div class="interaction-toast" id="interactionToast" role="status" aria-live="polite"></div>
+<div class="camera-caption"><span id="cameraStatus" role="status">이야기의 시선</span><strong id="shotLabel">항구 전경</strong></div>
+<div class="drag-hint">드래그로 회전 · 스크롤이나 두 손가락으로 확대</div>
+</div>
+<section class="reading-card" aria-label="등대의 마지막 편지 이야기">
+<div class="reading-top"><span>HARBOR JELLY · CHAPTER 01</span><span id="stageCounter">01 / 12</span></div>
+<div class="mission-progress"><span id="progressBar"></span></div>
+<p class="mission-kicker" id="missionKicker">프롤로그</p>
+<h1 id="missionTitle">등대의 마지막 편지.</h1>
+<div class="story-prose" id="storyProse"></div>
+<blockquote class="story-dialogue" id="storyDialogue"><span id="dialogueSpeaker"></span><p id="dialogueText"></p></blockquote>
+<div class="story-actions">
+<button class="primary-action" id="primaryAction" type="button">첫 장을 펼치다 <span>→</span></button>
+<button class="secondary-action" id="secondaryAction" type="button" hidden></button>
+</div>
+<div class="reading-bottom"><button id="previousAction" type="button" disabled>← 앞 문장</button><span id="readingStatus" role="status">천천히 읽어도 괜찮아요</span><button id="restartButton" type="button" aria-label="이야기 처음부터">↻</button></div>
+</section>
+<div class="settings-popover"><details class="settings-drawer"><summary>내 항구 꾸미기 <span>시간 · 물결 · 색깔</span></summary>
+<div class="settings-body">
+<div class="setting-label">시간</div>
+<div class="time-options" role="group" aria-label="시간 선택">
+<button class="time-option" data-time="day" type="button"><span class="time-icon">☀</span><span>낮</span></button>
+<button class="time-option active" data-time="sunset" type="button"><span class="time-icon">◒</span><span>노을</span></button>
+<button class="time-option" data-time="night" type="button"><span class="time-icon">☾</span><span>밤</span></button>
+</div>
+<div class="setting-label wave-label">물결 <strong id="waveValue">40%</strong></div>
+<input id="waveRange" type="range" min="0" max="100" value="40" aria-label="물결 강도">
+<div class="setting-label palette-label">색깔</div>
+<div class="palette-row"><button class="palette active" data-palette="candy" type="button" aria-label="파스텔 색깔"><i style="background:#eea591"></i><i style="background:#f2c75c"></i><i style="background:#8bc4b0"></i></button><button class="palette" data-palette="coastal" type="button" aria-label="해안 색깔"><i style="background:#789aba"></i><i style="background:#e6ddd0"></i><i style="background:#bba37b"></i></button><button class="palette" data-palette="bright" type="button" aria-label="선명한 색깔"><i style="background:#ec734d"></i><i style="background:#f8d848"></i><i style="background:#69a3ce"></i></button></div>
+<div class="ambient-switches"><label><input id="boatsToggle" type="checkbox" checked> 주변의 배</label><label><input id="birdsToggle" type="checkbox" checked> 갈매기</label><label><input id="lighthouseToggle" type="checkbox"> 등대 불빛</label></div>
+</div></details></div>
+</main>
+</div>
+<dialog id="aboutDialog"><button id="closeAbout" class="dialog-close" type="button" aria-label="닫기">×</button><span class="eyebrow">ABOUT THIS LITTLE WORLD</span><h2>Harbor Jelly.</h2><p>오래된 등대의 마지막 밤, 편지 한 통을 싣고 돌아오는 우편배, 그리고 다시 항구를 찾은 윤. 풍경과 문장이 함께 흐르는 작은 인터랙티브 소설입니다.</p><p>문장을 넘기면 시간이 흐르고, 불빛이 이어지고, 배가 돌아옵니다. 이야기 속 선택에 따라 윤이 기억하는 장면도 조금 달라집니다.</p></dialog>
+<script type="importmap">{"imports":{"three":"./vendor/three.module.js","three/addons/":"./vendor/"}}</script>
+<script type="module" src="./app3d.js"></script>
+</body>
+</html>

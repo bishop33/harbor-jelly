@@ -1,0 +1,106 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;500;600&display=swap');
+:root{--ink:#30463d;--paper:#f7f4ec}
+[hidden]{display:none!important}
+body{background:var(--paper);overflow:hidden}
+button:focus-visible,summary:focus-visible,input:focus-visible{outline:3px solid #be8d51;outline-offset:3px}
+.topbar{height:66px;background:#f7f4ec}
+.top-center{letter-spacing:2px}
+.novel-stage{position:relative;height:calc(100svh - 66px);min-height:540px;overflow:hidden;background:linear-gradient(125deg,#f5efe2,#eee9dc)}
+.canvas-wrap{position:absolute;inset:0 0 0 290px;min-height:0;margin:0;touch-action:none;isolation:isolate}
+#scene{display:block;width:100%;height:100%;cursor:grab}
+#scene:active{cursor:grabbing}
+.scene-badge{top:20px;left:auto;right:240px;z-index:2;background:#fffaf0dd;font-size:8px;padding:9px}
+.canvas-actions{top:16px;right:23px;z-index:2}
+.drag-hint{bottom:22px;font-size:10px;letter-spacing:0;z-index:2}
+.camera-caption{position:absolute;left:50%;bottom:66px;transform:translateX(-50%);z-index:2;padding:9px 15px;background:#244438dd;color:#fff4d4;border:1px solid #e0c78c44;border-radius:7px;display:flex;align-items:center;gap:12px;white-space:nowrap;pointer-events:none;backdrop-filter:blur(8px)}
+.camera-caption span{font-size:9px;opacity:.75}.camera-caption strong{font-size:11px;font-weight:500}
+.is-travelling .camera-caption{border-color:#e0c78c99}
+.reading-card{position:absolute;z-index:5;top:28px;left:30px;width:375px;padding:25px 27px 18px;border:1px solid #e0d7c6;border-radius:10px;background:#fffaf0f5;box-shadow:0 18px 55px #37463815;backdrop-filter:blur(15px)}
+.reading-top{display:flex;justify-content:space-between;gap:12px;color:#8b8f78;font-size:8px;letter-spacing:1.3px;font-weight:700}
+.mission-progress{height:2px;background:#e2dfd0;margin:15px 0 22px}
+.mission-progress span{display:block;height:100%;width:0;background:#bd9863;transition:width .4s}
+.mission-kicker{margin:0 0 8px;color:#a47c4a;font-size:10px;letter-spacing:1px}
+.reading-card h1{font:500 29px/1.35 'Noto Serif KR',Georgia,serif;letter-spacing:-1.2px;color:#2e473b;margin:0 0 20px}
+.story-prose{font:400 16px/1.85 'Noto Serif KR',Georgia,serif;color:#44584a;word-break:keep-all}
+.story-prose p{margin:0 0 12px}
+.story-dialogue{margin:18px 0 22px;padding:13px 0 13px 14px;border-left:2px solid #c6a774;color:#4f6755}
+.story-dialogue>span{display:block;font-size:10px;font-family:'DM Sans',sans-serif;color:#a07e53;margin-bottom:5px}
+.story-dialogue p{font:500 15px/1.7 'Noto Serif KR',Georgia,serif;margin:0;word-break:keep-all}
+.story-actions{display:flex;flex-direction:column;gap:8px}
+.primary-action,.secondary-action{border:0;border-radius:5px;padding:12px 14px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;font:600 12px 'DM Sans',sans-serif;min-height:44px}
+.primary-action{color:#fff9e9;background:#365d4b}
+.primary-action:hover{background:#264b39}
+.primary-action:disabled{background:#d4d8cb;color:#687566;cursor:default}
+.secondary-action{background:#ece8db;color:#4b6252;border:1px solid #ddd4c3}
+.secondary-action:hover{background:#e4ddcc}
+.primary-action span{font-size:18px}
+.reading-bottom{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:15px;color:#999887}
+.reading-bottom button{border:0;background:none;padding:2px 0;font-size:10px;color:#788770;cursor:pointer}
+.reading-bottom button:disabled{opacity:.35;cursor:default}
+.reading-bottom span{font-size:9px}
+.reading-bottom #restartButton{font-size:18px}
+.reading-card.page-turn .story-prose,.reading-card.page-turn .story-dialogue{animation:pageTurn .35s ease}
+@keyframes pageTurn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+.interaction-toast{bottom:64px;font-size:11px;max-width:90%;white-space:normal;text-align:center;z-index:4}
+.settings-popover{position:absolute;z-index:6;right:22px;bottom:20px;width:270px}
+.settings-drawer{background:#fffaf0ef;border:1px solid #dedacc;border-radius:7px;box-shadow:0 8px 30px #1f493b11}
+.settings-drawer summary{cursor:pointer;padding:12px 15px;display:flex;align-items:center;justify-content:space-between;font-size:11px;font-weight:700;color:#56705b;list-style:none}
+.settings-drawer summary span{font-size:9px;color:#969b86}
+.settings-drawer summary::after{content:'⌄';margin-left:7px}
+.settings-drawer[open] summary::after{content:'⌃'}
+.settings-drawer summary::-webkit-details-marker{display:none}
+.settings-body{padding:0 15px 16px}
+.setting-label{font-size:10px;font-weight:700;color:#6d846f;margin:12px 0 8px}
+.setting-label strong{float:right}
+.time-option{font-size:10px;padding:6px}.time-icon{font-size:17px}
+.ambient-switches{display:flex;flex-wrap:wrap;gap:8px;margin-top:13px;font-size:9px;color:#6d846f}
+.ambient-switches input{accent-color:#5f8669}
+dialog{max-width:490px}
+@media(max-width:900px){
+.top-center{display:none}
+.novel-stage{height:calc(100svh - 60px);min-height:550px}
+.topbar{height:60px;padding:0 18px}
+.reading-card{top:12px;left:14px;width:calc(100% - 28px);padding:17px 20px 13px;max-width:none}
+.reading-top{font-size:7px}
+.mission-progress{margin:9px 0 12px}
+.mission-kicker{font-size:9px;margin-bottom:5px}
+.reading-card h1{font-size:24px;margin-bottom:10px}
+.story-prose{font-size:15px;line-height:1.65}
+.story-prose p{margin-bottom:6px}
+.story-dialogue{margin:10px 0 12px;padding:6px 0 6px 11px}
+.story-dialogue p{font-size:14px;line-height:1.6}
+.story-dialogue>span{font-size:9px;margin-bottom:2px}
+.story-actions{flex-direction:row;gap:6px}
+.primary-action,.secondary-action{flex:1;padding:10px 12px;font-size:11px;min-height:42px}
+.reading-bottom{margin-top:10px}
+.canvas-wrap{inset:345px 0 0}
+.scene-badge{top:6px;left:15px;right:auto;font-size:7px;padding:7px}
+.canvas-actions{top:3px;right:15px}
+.circle-button{width:28px;height:28px;font-size:17px}
+.drag-hint{bottom:12px;left:16px;transform:none;font-size:8px;padding:8px}
+.drag-hint{max-width:180px;white-space:normal;line-height:1.4}
+.camera-caption{left:15px;bottom:58px;transform:none;padding:7px 10px;gap:7px}.camera-caption span{font-size:8px}.camera-caption strong{font-size:10px}
+.settings-popover{right:14px;bottom:12px;width:145px}
+.settings-popover:has(details[open]){width:250px}
+.settings-drawer summary{font-size:10px;padding:9px 11px}
+.settings-drawer summary span{display:none}
+.interaction-toast{bottom:48px;font-size:10px}
+}
+@media(max-height:720px) and (max-width:900px){
+.novel-stage{min-height:480px}
+.reading-card{top:8px;padding:12px 16px 10px}
+.reading-card h1{font-size:21px;margin-bottom:7px}
+.story-prose{font-size:14px;line-height:1.55}
+.story-dialogue{margin:7px 0 9px}
+.story-dialogue p{font-size:13px}
+.canvas-wrap{top:305px}
+.mission-progress{margin:7px 0 8px}
+.reading-bottom{margin-top:7px}
+}
+@media(max-height:620px) and (min-width:901px){
+.reading-card{top:16px;padding:17px 23px}
+.reading-card h1{font-size:25px;margin-bottom:12px}
+.story-prose{font-size:15px;line-height:1.65}
+.story-dialogue{margin:12px 0}
+}
+@media(prefers-reduced-motion:reduce){.page-turn .story-prose,.page-turn .story-dialogue{animation:none}.mission-progress span{transition:none}}
