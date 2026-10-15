@@ -40,6 +40,10 @@ jobs:
           node --check dist/forest.js
           node --check dist/forest-world.js
           node --check dist/forest-math.js
+          node --check dist/journey.js
+          node --check dist/journey-worlds.js
+          node --check dist/journey-math.js
+          node --check dist/journey-audio.js
           npm test
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
